@@ -1,9 +1,10 @@
-import java.io.*;
+import java.io.File;
 import java.lang.Runtime;
 import java.text.DecimalFormat;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Date;
@@ -13,16 +14,35 @@ public class Rename {
 
     public static String date;
     public static String time;
-    public static LinkedHashMap<String,ArrayList<String>> map=new LinkedHashMap<String,ArrayList<String>>();
+    public static Map<String,ArrayList<String>> map=new LinkedHashMap<String,ArrayList<String>>();
     public static HashSet<String> set = new HashSet<>(Arrays.asList(
             "-h", "-help", "-f", "-file", "-p", "-prefix", "-s", "-suffix", "-r", "-replace"));
 
     public static void main(String[] args) {
         Rename runner = new Rename();
         runner.processArgs(args);
-        System.out.println(Arrays.asList(map));
 
+        ArrayList<String> files = map.get("-f");
 
+        // boolean success = file1.renameTo(file2);
+
+        for (Map.Entry<String,ArrayList<String>> entry : map.entrySet()) {
+            String key = entry.getKey();
+            ArrayList<String> value = entry.getValue();
+
+            if (key.equals("-f")) continue;
+
+            // iterate through files
+            for (String file: files) {
+                if (key.equals("-r")) {
+                    System.out.println("Replace " + value.get(0) + " with " + value.get(1) + " on file "  + file);
+                    continue;
+                }
+                for (String val: value) {
+                    System.out.println("Call " + key + " with val " + val + " on file "  + file);
+                }
+            }
+        }
     }
 
     public static void returnError(String err) {
@@ -54,13 +74,19 @@ public class Rename {
     }
 
     public void findFile(String file) {
-        try {
-            FileInputStream fis=new FileInputStream(file);
-        } catch (Exception e) {
-            String errMsg = "Error: file " + file + " had some problems. " +
-                    "The message from the client is: \n\t-> " + e.getMessage();
+        // makes directories valid
+        File f = new File(file);
+        if (!f.exists()) {
+            String errMsg = "Error: file " + f.toString() + " does not exist.";
             returnError(errMsg);
         }
+//        try {
+//            FileInputStream fis=new FileInputStream(file);
+//        } catch (Exception e) {
+//            String errMsg = "Error: file " + file + " had some problems. " +
+//                    "The message from the client is: \n\t-> " + e.getMessage();
+//            returnError(errMsg);
+//        }
     }
 
     public void processArgs(String[] args) {
