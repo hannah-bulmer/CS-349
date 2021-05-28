@@ -1,24 +1,28 @@
-import java.io.File;
+import java.io.*;
 import java.lang.Runtime;
 import java.text.DecimalFormat;
 import java.net.InetAddress;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 public class Rename {
 
-    public static HashMap<String,ArrayList<String>> map=new HashMap<String,ArrayList<String>>();
+    public static String date;
+    public static String time;
+    public static LinkedHashMap<String,ArrayList<String>> map=new LinkedHashMap<String,ArrayList<String>>();
     public static HashSet<String> set = new HashSet<>(Arrays.asList(
             "-h", "-help", "-f", "-file", "-p", "-prefix", "-s", "-suffix", "-r", "-replace"));
 
     public static void main(String[] args) {
         Rename runner = new Rename();
-
         runner.processArgs(args);
+        System.out.println(Arrays.asList(map));
 
-        System.out.println(Arrays.asList(map)); // method 1
+
     }
 
     public static void returnError(String err) {
@@ -27,36 +31,65 @@ public class Rename {
     }
 
     public static void printHelp() {
-        System.out.println("I am the help menu!");
+        System.out.println("(c) 2021 Hannah Bulmer. Revised: May 28, 2021.");
+        System.out.println("Usage: rename [-option argument1 argument2 ...]");
+        System.out.println("");
+        System.out.println("Options:");
+        System.out.println("-f|file [filename]          :: file(s) to change.");
+        System.out.println("-p|prefix [string]          :: rename [filename] so that it starts with [string].");
+        System.out.println("-s|suffix [string]          :: rename [filename] so that it ends with [string].");
+        System.out.println("-r|replace [str1] [str2]    :: rename [filename] by replacing all instances of [str1] with [str2].");
+        System.out.println("-h|help                     :: print out this help and exit the program.");
         System.exit(0);
     }
 
     Rename() {}
 
+    public void getDateAndTime() {
+        Date today = new Date();
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("MM-dd-yyyy");
+        SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss");
+        date = dateFormatter.format(today);
+        time = timeFormatter.format(today);
+    }
+
+    public void findFile(String file) {
+        try {
+            FileInputStream fis=new FileInputStream(file);
+        } catch (Exception e) {
+            String errMsg = "Error: file " + file + " had some problems. " +
+                    "The message from the client is: \n\t-> " + e.getMessage();
+            returnError(errMsg);
+        }
+    }
+
     public void processArgs(String[] args) {
         int len = args.length;
-        if (len == 0) returnError("Error, please add at least one flag");
+        if (len == 0) returnError("Error: please add at least one flag");
+
+        // get date and time
+        this.getDateAndTime();
 
         String curFlag = "";
         for (int i = 0; i < len; i ++) {
             String arg = args[i];
             if (arg.charAt(0) == '-') {
+                // flag
                 if (set.contains(arg)) {
-                    String key = arg.substring(0,2);
-                    System.out.println("Adding " + key);
+                    String key = arg.substring(0, 2);
                     curFlag = key;
-                    if (map.containsKey(key)) returnError("Error, flag " + key + " given more than once");
+                    if (map.containsKey(key)) returnError("Error: flag " + key + " given more than once");
                     map.put(key, new ArrayList<>());
                 }
             } else {
                 // argument
-                if (curFlag.equals("")) returnError("Error, please add at least one flag");
-                if (curFlag.equals("-h")) returnError("Error, -help does not take any arguments");
+                if (curFlag.equals("")) returnError("Error: please add at least one flag");
+                if (curFlag.equals("-h")) returnError("Error: -help does not take any arguments");
                 ArrayList<String> arguments = map.get(curFlag);
-                if (curFlag.equals("-r") && arguments.size() == 2)
-                    returnError("Error, -replace only takes 2 arguments");
 
                 // convert @date and @time into the date/time
+                if (arg.equals("@date")) arg = date;
+                if (arg.equals("@time")) arg = time;
                 arguments.add(arg);
             }
         }
@@ -64,14 +97,30 @@ public class Rename {
         // print help menu
         if (map.containsKey("-h")) printHelp();
 
-        // error checking
-
+        // check for errors
         // need at least 1 file provided
-        if (!map.containsKey("-f")) returnError("Error, please use -f option to add a file");
-        if (map.get("-f").size() == 0) returnError("Error, please specify at least one file");
+        if (!map.containsKey("-f")) returnError("Error: please use -f option to add a file");
+        if (map.get("-f").size() == 0) returnError("Error: please specify at least one file");
+
+        // make sure all files are valid
+        ArrayList<String> files = map.get("-f");
+        for (String file: files) {
+            this.findFile(file);
+        }
+
+        // if file is listed more than once, error
+        HashSet<String> s = new HashSet<String>();
+        for(String f : files) {
+            if(!s.add(f)) {
+                String err = "Error: File '" + f + "' was provided twice. Please only provide distinct filenames" +
+                        " to avoid putting your files into invalid state";
+                returnError(err);
+            }
+        }
+
         // need at least 1 of replace, suffix, prefix
         if (!map.containsKey("-r") && !map.containsKey("-p") && !map.containsKey("-s"))
-            returnError("Error, please add some options for how you would like to rename your files");
+            returnError("Error: please add some options for how you would like to rename your files");
 
         // if replace, need exactly 2 args
         if (map.containsKey("-r") && map.get("-r").size() != 2)
