@@ -24,25 +24,22 @@ public class Rename {
 
         ArrayList<String> files = map.get("-f");
 
+        System.out.println(Arrays.asList(files));
+
         // boolean success = file1.renameTo(file2);
 
         for (Map.Entry<String,ArrayList<String>> entry : map.entrySet()) {
             String key = entry.getKey();
-            ArrayList<String> value = entry.getValue();
+            ArrayList<String> values = entry.getValue();
 
             if (key.equals("-f")) continue;
+            if (key.equals("-r")) runner.runReplace(files, values.get(0), values.get(1));
+            if (key.equals("-p")) runner.runPrefix(files,values);
+            if (key.equals("-s")) runner.runSuffix(files,values);
 
-            // iterate through files
-            for (String file: files) {
-                if (key.equals("-r")) {
-                    System.out.println("Replace " + value.get(0) + " with " + value.get(1) + " on file "  + file);
-                    continue;
-                }
-                for (String val: value) {
-                    System.out.println("Call " + key + " with val " + val + " on file "  + file);
-                }
-            }
         }
+
+        System.out.println(Arrays.asList(files));
     }
 
     public static void returnError(String err) {
@@ -64,6 +61,31 @@ public class Rename {
     }
 
     Rename() {}
+
+    public void runReplace(ArrayList<String> files, String val1, String val2) {
+        for (int i = 0; i < files.size(); i ++) {
+            System.out.println("Replace " + val1 + " with " + val2 + " on file "  + files.get(i));
+            files.set(i, files.get(i).replace(val1, val2));
+        }
+    }
+
+    public void runPrefix(ArrayList<String> files, ArrayList<String> values) {
+        for (String val: values) {
+            for (int i = 0; i < files.size(); i ++) {
+                System.out.println("Adding prefix to file " + files.get(i));
+                files.set(i, val+files.get(i));
+            }
+        }
+    }
+
+    public void runSuffix(ArrayList<String> files, ArrayList<String> values) {
+        for (String val: values) {
+            for (int i = 0; i < files.size(); i ++) {
+                System.out.println("Adding suffix to file " + files.get(i));
+                files.set(i, files.get(i)+val);
+            }
+        }
+    }
 
     public void getDateAndTime() {
         Date today = new Date();
