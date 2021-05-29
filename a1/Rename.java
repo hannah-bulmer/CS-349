@@ -22,11 +22,8 @@ public class Rename {
         Rename runner = new Rename();
         runner.processArgs(args);
 
+        ArrayList<String> oldFilenames = new ArrayList<>(map.get("-f"));
         ArrayList<String> files = map.get("-f");
-
-        System.out.println(Arrays.asList(files));
-
-        // boolean success = file1.renameTo(file2);
 
         for (Map.Entry<String,ArrayList<String>> entry : map.entrySet()) {
             String key = entry.getKey();
@@ -40,6 +37,23 @@ public class Rename {
         }
 
         System.out.println(Arrays.asList(files));
+        System.out.println(Arrays.asList(oldFilenames));
+
+        if (files.size() != oldFilenames.size())
+            returnError("Something bad occured");
+
+        // rename files
+        for (int i = 0; i < files.size(); i ++) {
+            File file1 = new File(oldFilenames.get(i));
+            File file2 = new File(files.get(i));
+
+            boolean success = file1.renameTo(file2);
+            if (success) {
+                System.out.println("Successfully renamed " + file1 + " to " + file2);
+            } else {
+                System.out.println("Error renaming " + file1 + " to " + " file2. Operation skipped. Contiuing...");
+            }
+        }
     }
 
     public static void returnError(String err) {
@@ -64,7 +78,11 @@ public class Rename {
 
     public void runReplace(ArrayList<String> files, String val1, String val2) {
         for (int i = 0; i < files.size(); i ++) {
-            System.out.println("Replace " + val1 + " with " + val2 + " on file "  + files.get(i));
+//            System.out.println("Replace " + val1 + " with " + val2 + " on file "  + files.get(i));
+            if (files.get(i).equals(files.get(i).replace(val1, val2))) {
+                System.out.println("Running -replace on " + files.get(i) + " made no changes");
+            } else if (files.contains(files.get(i).replace(val1, val2)))
+                returnError("Error: running -replace causes duplicate filenames to occur");
             files.set(i, files.get(i).replace(val1, val2));
         }
     }
@@ -72,7 +90,9 @@ public class Rename {
     public void runPrefix(ArrayList<String> files, ArrayList<String> values) {
         for (String val: values) {
             for (int i = 0; i < files.size(); i ++) {
-                System.out.println("Adding prefix to file " + files.get(i));
+                if (files.contains(val+files.get(i)))
+                    returnError("Error: running -prefix causes duplicate filenames to occur");
+//                System.out.println("Adding prefix to file " + files.get(i));
                 files.set(i, val+files.get(i));
             }
         }
@@ -81,7 +101,9 @@ public class Rename {
     public void runSuffix(ArrayList<String> files, ArrayList<String> values) {
         for (String val: values) {
             for (int i = 0; i < files.size(); i ++) {
-                System.out.println("Adding suffix to file " + files.get(i));
+                if (files.contains(files.get(i)+val))
+                    returnError("Error: running -suffix causes duplicate filenames to occur");
+//                System.out.println("Adding suffix to file " + files.get(i));
                 files.set(i, files.get(i)+val);
             }
         }
@@ -128,6 +150,8 @@ public class Rename {
                     curFlag = key;
                     if (map.containsKey(key)) returnError("Error: flag " + key + " given more than once");
                     map.put(key, new ArrayList<>());
+                } else {
+                    returnError("Error: flag " + arg + " not recognized");
                 }
             } else {
                 // argument
