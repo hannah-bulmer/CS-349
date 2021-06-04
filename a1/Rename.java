@@ -51,7 +51,8 @@ public class Rename {
             if (success) {
                 System.out.println("Successfully renamed " + file1 + " to " + file2);
             } else {
-                System.out.println("Error renaming " + file1 + " to " + " file2. Operation skipped. Contiuing...");
+                System.out.println("Error renaming " + file1 + " to " + " " + file2 + ". " +
+                        "Check for duplicate filenames in same path. Contiuing...");
             }
         }
     }
