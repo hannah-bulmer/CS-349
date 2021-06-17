@@ -6,6 +6,16 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.*;
+import javafx.scene.input.KeyCode;
+import javafx.geometry.Point2D;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.text.Text;
+import javafx.scene.text.Font;
+
+import java.io.FileNotFoundException;
 
 public class SpaceInvaders extends Application {
     float screen_width = 800;
@@ -13,32 +23,40 @@ public class SpaceInvaders extends Application {
     float left_edge = 20;
     float right_edge = screen_width - 3 * left_edge;
 
-    int num_balls = 10;
+    int cols = 10;
     int rows = 5;
-    Enemy [][] balls = new Enemy [rows][num_balls];
-    float left_ball_x = left_edge + 15;
-    float ball_x_dist = 60;
-    float ball_y = 25;
-    float ball_y_dist = 50;
+    Enemy [][] aliens = new Enemy [rows][cols];
+    float left_alien_x = left_edge + 15;
+    float alien_x_dist = 53;
+    float alien_y = 50;
+    float alien_y_dist = 50;
+
+    Text highScore = new Text("High score: 0");
+    Text levelNum = new Text("Level: 1");
+
+    PlayerBullet playerBullet;
+    Player player;
+
+    Group root = new Group();
 
     @Override
     public void start(Stage stage) throws Exception {
-        // executed after init() method
         stage.setResizable(false);
         stage.setTitle("Space Invaders");
 
-        float x = left_ball_x;
-        float y = ball_y;
-        for (int i = 0; i < rows; i ++) {
-            for (int j = 0; j < num_balls; j ++) {
-                balls[i][j] = new Enemy("src/resources/images/enemy1.png");
-                balls[i][j].setCenterX(x);
-                balls[i][j].setCenterY(y);
-                x += ball_x_dist;
-            }
-            x = left_ball_x;
-            y += ball_y_dist;
-        }
+        // setup Player
+        player = new Player(screen_width,screen_height);
+        playerBullet = new PlayerBullet();
+        root.getChildren().add(player.getPlayer());
+
+        // Setup aliens
+        placeAliens();
+
+        // setup HUD
+        setTextStyles(highScore, 40);
+        setTextStyles(levelNum, 500);
+        Lives l = new Lives();
+        l.addToGroup(root);
 
         AnimationTimer timer = new AnimationTimer() {
             @Override
@@ -46,36 +64,97 @@ public class SpaceInvaders extends Application {
                 handle_animation();
             }
         };
-
         timer.start();
-
-        Group root = new Group();
-
-        for (Enemy[] row:balls) {
-            for (Enemy e: row) {
-                root.getChildren().add(e.getEnemy());
-            }
-        }
 
         Label label = new Label("Hello World!!");
         Scene intro = new Scene(new StackPane(label), screen_width, screen_height);
-        Scene level1 = new Scene(root, screen_width, screen_height);
-        Scene level2 = new Scene(new StackPane(), screen_width, screen_height);
-        Scene level3 = new Scene(new StackPane(), screen_width, screen_height);
+        Scene level = new Scene(root, screen_width, screen_height);
 
 
-        level1.setFill(Color.BLACK);
-        stage.setScene(level1);
+
+        setupLevel(level);
+
+        stage.setScene(level);
         stage.show();
     }
 
     void handle_animation() {
-        for (int i = 0; i < rows; i ++) {
-            for (int j = 0; j < num_balls; j ++) {
-                balls[i][j].handle_animation(left_edge + j * ball_x_dist,
-                        right_edge - (num_balls - j - 1) * ball_x_dist);
+        ImageView pb = playerBullet.getPlayerBullet();
+        if (root.getChildren().contains(pb)) {
+            playerBullet.handle_animation();
+
+            if (playerBullet.getY() < 0) {
+                root.getChildren().remove(pb);
+                System.out.println("Removed bullet");
             }
         }
+        for (int i = 0; i < rows; i ++) {
+            for (int j = 0; j < cols; j ++) {
+                if (root.getChildren().contains(pb)) {
+                    Point2D point = new Point2D(playerBullet.getX(), playerBullet.getY());
+                    if (aliens[i][j].getEnemy().contains(point) && root.getChildren().contains(aliens[i][j].getEnemy())) {
+                        root.getChildren().remove(aliens[i][j].getEnemy());
+                        Enemy.destroyEnemy();
+                        highScore.setText("High score: " + String.valueOf(Enemy.getEnemiesDestroyed()));
+                        root.getChildren().remove(pb);
+                    }
+                }
+                aliens[i][j].handle_animation(left_edge + j * alien_x_dist,
+                        right_edge - (cols - j - 1) * alien_x_dist);
+            }
+        }
+    }
+
+    void setupLevel(Scene level) {
+        level.setFill(Color.BLACK);
+
+        level.setOnKeyPressed(keyEvent -> {
+            if(keyEvent.getCode() == KeyCode.A || keyEvent.getCode() == KeyCode.LEFT) {
+                player.moveLeft();
+            }
+            if(keyEvent.getCode() == KeyCode.D || keyEvent.getCode() == KeyCode.RIGHT) {
+                player.moveRight();
+            }
+            if(keyEvent.getCode() == KeyCode.SPACE || keyEvent.getCode() == KeyCode.ENTER) {
+                // create bullet that moves
+                System.out.println("New bullet");
+                if (!root.getChildren().contains(playerBullet.getPlayerBullet())) {
+                    playerBullet.setX((float)(player.getPlayer().getX() + player.getPlayer().getFitWidth()/2 - playerBullet.getPlayerBullet().getFitWidth()/2));
+                    playerBullet.setY((float)(player.getPlayer().getY()));
+                    root.getChildren().add(playerBullet.getPlayerBullet());
+                }
+            }
+        });
+    }
+
+    void placeAliens() throws FileNotFoundException {
+        float x = left_alien_x;
+        float y = alien_y;
+        for (int i = 0; i < rows; i ++) {
+            for (int j = 0; j < cols; j ++) {
+                int num = i % 3 + 1;
+                aliens[i][j] = new Enemy(num);
+                aliens[i][j].setCenterX(x);
+                aliens[i][j].setCenterY(y);
+                x += alien_x_dist;
+            }
+            x = left_alien_x;
+            y += alien_y_dist;
+        }
+
+        for (Enemy[] row:aliens) {
+            for (Enemy e: row) {
+                root.getChildren().add(e.getEnemy());
+            }
+        }
+    }
+
+    void setTextStyles(Text text, int x) {
+        text.setX(x);
+        text.setY(30);
+        text.setFont(Font.font("Avenir", 20));
+        text.setFill(Color.WHITE);
+        root.getChildren().add(text);
     }
 }
 
