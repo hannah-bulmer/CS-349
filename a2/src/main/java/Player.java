@@ -13,6 +13,9 @@ public class Player {
     int h = 30;
 
     int speed = 10;
+    int velocity = 0;
+
+    PlayerBullet bullet;
 
     public Player(float screen_width, float screen_height) throws FileNotFoundException {
         image = new Image(new FileInputStream("src/resources/images/player.png"));
@@ -24,26 +27,39 @@ public class Player {
         float y = screen_height - 50;
         imageView.setX(x);
         imageView.setY(y);
+        bullet = new PlayerBullet();
+    }
+
+    public void shootBullet(Group root) {
+        ImageView pb = bullet.getPlayerBullet();
+        if (!root.getChildren().contains(pb)) {
+            bullet.setX((float)(imageView.getX() + imageView.getFitWidth()/2 - pb.getFitWidth()/2));
+            bullet.setY((float)(imageView.getY()));
+            root.getChildren().add(pb);
+        }
     }
 
     public ImageView getPlayer() {
         return imageView;
     }
 
-    /**
-     * @param x
-     */
+    public PlayerBullet getBullet() {
+        return bullet;
+    }
+
     public void moveLeft() {
-        float x = (float)(imageView.getX());
-        imageView.setX(x - speed);
+        velocity = speed * -1;
     }
 
-    /**
-     * @param y:
-     */
     public void moveRight() {
-        float x = (float)(imageView.getX());
-        imageView.setX(x + speed);
+        velocity = speed;
     }
 
+    public void stop() {
+        velocity = 0;
+    }
+
+    public void handle_animation() {
+        imageView.setX(imageView.getX() + velocity);
+    }
 }

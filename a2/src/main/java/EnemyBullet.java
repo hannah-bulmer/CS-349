@@ -1,20 +1,19 @@
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import javafx.application.Application;
 import javafx.scene.Group;
-import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class PlayerBullet {
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
+public class EnemyBullet {
     Image image;
     ImageView imageView;
-    int w = 5;
-    int h = 10;
-    float bulletSpeed = 15;
+    int w = 10;
+    int h = 20;
+    float bulletSpeed = 5;
 
-    public PlayerBullet() throws FileNotFoundException {
-        image = new Image(new FileInputStream("src/resources/images/player_bullet.png"));
+    public EnemyBullet(int img_num) throws FileNotFoundException {
+        image = new Image(new FileInputStream(String.format("src/resources/images/bullet%d.png", img_num)));
         imageView = new ImageView(image);
         imageView.setFitHeight(h);
         imageView.setFitWidth(w);
@@ -36,15 +35,15 @@ public class PlayerBullet {
         return (float)(imageView.getY());
     }
 
-    public ImageView getPlayerBullet() {
+    public ImageView getBullet() {
         return imageView;
     }
 
     public void handle_animation(Group root) {
         if (root.getChildren().contains(imageView)) {
-            this.setY(this.getY() - bulletSpeed);
+            this.setY(this.getY() + bulletSpeed);
 
-            if (imageView.getY() < 0) {
+            if (imageView.getY() > 600) {
                 root.getChildren().remove(imageView);
             }
         }

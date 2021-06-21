@@ -34,7 +34,7 @@ public class SpaceInvaders extends Application {
     Text highScore = new Text("High score: 0");
     Text levelNum = new Text("Level: 1");
 
-    PlayerBullet playerBullet;
+//    PlayerBullet playerBullet;
     Player player;
 
     Group root = new Group();
@@ -46,7 +46,6 @@ public class SpaceInvaders extends Application {
 
         // setup Player
         player = new Player(screen_width,screen_height);
-        playerBullet = new PlayerBullet();
         root.getChildren().add(player.getPlayer());
 
         // Setup aliens
@@ -70,8 +69,6 @@ public class SpaceInvaders extends Application {
         Scene intro = new Scene(new StackPane(label), screen_width, screen_height);
         Scene level = new Scene(root, screen_width, screen_height);
 
-
-
         setupLevel(level);
 
         stage.setScene(level);
@@ -79,19 +76,19 @@ public class SpaceInvaders extends Application {
     }
 
     void handle_animation() {
-        ImageView pb = playerBullet.getPlayerBullet();
-        if (root.getChildren().contains(pb)) {
-            playerBullet.handle_animation();
+        player.handle_animation();
 
-            if (playerBullet.getY() < 0) {
-                root.getChildren().remove(pb);
-                System.out.println("Removed bullet");
-            }
-        }
+        player.getBullet().handle_animation(root);
+        ImageView pb = player.getBullet().getPlayerBullet();
+
+        int x = (int)Math.floor(Math.random()*(rows-1));
+        int y = (int)Math.floor(Math.random()*(cols-1));
+
         for (int i = 0; i < rows; i ++) {
             for (int j = 0; j < cols; j ++) {
                 if (root.getChildren().contains(pb)) {
-                    Point2D point = new Point2D(playerBullet.getX(), playerBullet.getY());
+                    // centre bullet
+                    Point2D point = new Point2D(player.getBullet().getX(), player.getBullet().getY());
                     if (aliens[i][j].getEnemy().contains(point) && root.getChildren().contains(aliens[i][j].getEnemy())) {
                         root.getChildren().remove(aliens[i][j].getEnemy());
                         Enemy.destroyEnemy();
@@ -99,8 +96,8 @@ public class SpaceInvaders extends Application {
                         root.getChildren().remove(pb);
                     }
                 }
-                aliens[i][j].handle_animation(left_edge + j * alien_x_dist,
-                        right_edge - (cols - j - 1) * alien_x_dist);
+                aliens[i][j].handle_animation(root,left_edge + j * alien_x_dist,
+                        right_edge - (cols - j - 1) * alien_x_dist, i == x && j == y);
             }
         }
     }
@@ -116,13 +113,13 @@ public class SpaceInvaders extends Application {
                 player.moveRight();
             }
             if(keyEvent.getCode() == KeyCode.SPACE || keyEvent.getCode() == KeyCode.ENTER) {
-                // create bullet that moves
-                System.out.println("New bullet");
-                if (!root.getChildren().contains(playerBullet.getPlayerBullet())) {
-                    playerBullet.setX((float)(player.getPlayer().getX() + player.getPlayer().getFitWidth()/2 - playerBullet.getPlayerBullet().getFitWidth()/2));
-                    playerBullet.setY((float)(player.getPlayer().getY()));
-                    root.getChildren().add(playerBullet.getPlayerBullet());
-                }
+                player.shootBullet(root);
+            }
+        });
+
+        level.setOnKeyReleased(keyEvent -> {
+            if(keyEvent.getCode() == KeyCode.A || keyEvent.getCode() == KeyCode.LEFT || keyEvent.getCode() == KeyCode.D || keyEvent.getCode() == KeyCode.RIGHT) {
+                player.stop();
             }
         });
     }
