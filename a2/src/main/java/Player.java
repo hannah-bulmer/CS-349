@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -7,6 +8,9 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.Media;
+import javafx.util.Duration;
 
 public class Player {
     Image image;
@@ -19,11 +23,17 @@ public class Player {
     int velocity = 0;
     int MAX_BULLETS = 3;
 
+    MediaPlayer bulletSound;
+
     ArrayList<PlayerBullet> bullets = new ArrayList<>();
 
-    public Player(float screen_width, float screen_height) throws FileNotFoundException {
-        image = new Image(new FileInputStream("src/resources/images/player.png"));
-        imageView = new ImageView(image);
+    public Player(float screen_width, float screen_height) {
+        try {
+            image = new Image(new FileInputStream("src/resources/images/player.png"));
+            imageView = new ImageView(image);
+        } catch (FileNotFoundException e) {
+            System.exit(0);
+        }
         imageView.setFitHeight(h);
         imageView.setFitWidth(w);
 
@@ -33,10 +43,15 @@ public class Player {
         this.screenWidth = screen_width;
         imageView.setX(x);
         imageView.setY(y);
+        Media sound = new Media(new File("src/resources/sounds/shoot.wav").toURI().toString());
+        bulletSound = new MediaPlayer(sound);
     }
 
     public void shootBullets(Group root) {
         if (bullets.size() > MAX_BULLETS - 1) return;
+        System.out.println("Play sound");
+        bulletSound.seek(Duration.ZERO);
+        bulletSound.play();
         PlayerBullet bullet = new PlayerBullet();
         ImageView pb = bullet.getPlayerBullet();
         bullets.add(bullet);

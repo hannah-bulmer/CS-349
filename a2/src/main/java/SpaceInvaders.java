@@ -52,17 +52,6 @@ public class SpaceInvaders extends Application {
         stage.setResizable(false);
         stage.setTitle("Space Invaders");
 
-        // setup Player
-        player = new Player(screen_width,screen_height);
-        root.getChildren().add(player.getPlayer());
-
-        // Setup aliens
-        placeAliens();
-
-        // setup HUD
-        l = new Lives();
-        l.addToGroup(root);
-
         timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -81,6 +70,7 @@ public class SpaceInvaders extends Application {
     }
 
     void handle_animation() {
+        if (level.getRoot() != root) return;
         if (Enemy.getEnemyCount() == 0) {
             l.winState(root,level, Enemy.getEnemiesDestroyed());
 //            timer.stop();
@@ -141,6 +131,17 @@ public class SpaceInvaders extends Application {
     }
 
     void setupLevel(Scene level, int num) {
+        // setup Player
+        player = new Player(screen_width,screen_height);
+        root.getChildren().add(player.getPlayer());
+
+        // Setup aliens
+        placeAliens();
+
+        // setup HUD
+        l = new Lives();
+        l.addToGroup(root);
+
         level.setFill(Color.BLACK);
 
         levelNum = new Text("Level: "+ num);
@@ -275,27 +276,27 @@ public class SpaceInvaders extends Application {
                 timer.start();
                 Enemy.reset();
                 root = new Group();
-                placeAliens();
-                root.getChildren().add(player.getPlayer());
-                l.reset(root);
+//                placeAliens();
+//                root.getChildren().add(player.getPlayer());
+//                l.reset(root);
                 setupLevel(level, 1);
                 s.setRoot(root);
             } else if (keyEvent.getCode() == KeyCode.DIGIT2) {
                 timer.start();
                 Enemy.reset();
                 root = new Group();
-                placeAliens();
-                root.getChildren().add(player.getPlayer());
-                l.reset(root);
+//                placeAliens();
+//                root.getChildren().add(player.getPlayer());
+//                l.reset(root);
                 setupLevel(level, 2);
                 s.setRoot(root);
             } else if (keyEvent.getCode() == KeyCode.DIGIT3) {
                 timer.start();
                 Enemy.reset();
                 root = new Group();
-                placeAliens();
-                root.getChildren().add(player.getPlayer());
-                l.reset(root);
+//                placeAliens();
+//                root.getChildren().add(player.getPlayer());
+//                l.reset(root);
                 setupLevel(level, 3);
                 s.setRoot(root);
             } else if (keyEvent.getCode() == KeyCode.Q) {
@@ -304,9 +305,9 @@ public class SpaceInvaders extends Application {
                 timer.start();
                 Enemy.reset();
                 root = new Group();
-                placeAliens();
-                root.getChildren().add(player.getPlayer());
-                l.reset(root);
+//                placeAliens();
+//                root.getChildren().add(player.getPlayer());
+//                l.reset(root);
                 setupStart(level);
                 level.setRoot(start);
             }

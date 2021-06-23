@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import javafx.application.Application;
@@ -11,12 +12,15 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.StackPane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.*;
 import javafx.geometry.Insets;
+import javafx.util.Duration;
 
 public class Lives {
     Image image;
@@ -24,8 +28,16 @@ public class Lives {
 
     int count = 3;
 
-    public Lives() throws FileNotFoundException {
-        image = new Image(new FileInputStream("src/resources/images/player.png"));
+    MediaPlayer loseSound;
+
+    public Lives() {
+        try {
+            image = new Image(new FileInputStream("src/resources/images/player.png"));
+            Media sound = new Media(new File("src/resources/sounds/explosion.wav").toURI().toString());
+            loseSound = new MediaPlayer(sound);
+        } catch (FileNotFoundException e) {
+            System.exit(0);
+        }
 
         for (int i = 0; i < 3; i ++) {
             imageViews[i] = new ImageView(image);
@@ -38,7 +50,7 @@ public class Lives {
 
     public void reset(Group root) {
         count = 3;
-        this.addToGroup(root);
+//        this.addToGroup(root);
     }
 
     public void gameOver(Group root, Scene s, int highscore) {
@@ -47,6 +59,8 @@ public class Lives {
     }
 
     public boolean loseLife(Group root, Player player, Scene s, int highscore) {
+        loseSound.seek(Duration.ZERO);
+        loseSound.play();
         if (count == 0) {
             gameOver(root, s, highscore);
             return true;
@@ -101,6 +115,7 @@ public class Lives {
     }
 
     public void addToGroup(Group g) {
+        count = 3;
         Text text = new Text("Lives: ");
         text.setX(600);
         text.setY(30);

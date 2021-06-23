@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.io.FileNotFoundException;
@@ -6,6 +7,9 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.util.Duration;
 
 public class Enemy {
     Image image;
@@ -27,6 +31,9 @@ public class Enemy {
     static int count = 0;
     static int enemiesDestroyed = 0;
 
+    static MediaPlayer killedSound;
+    MediaPlayer shootSound;
+
     /**
      * @throws FileNotFoundException
      */
@@ -37,6 +44,11 @@ public class Enemy {
             imageView.setFitHeight(h);
             imageView.setFitWidth(w);
             bullet = new EnemyBullet(img_num);
+            Media sound = new Media(new File("src/resources/sounds/invaderkilled.wav").toURI().toString());
+            killedSound = new MediaPlayer(sound);
+
+            Media sound2 = new Media(new File(String.format("src/resources/sounds/fastinvader%d.wav", img_num)).toURI().toString());
+            shootSound = new MediaPlayer(sound2);
         } catch (FileNotFoundException e) {
             System.exit(0);
         }
@@ -87,6 +99,8 @@ public class Enemy {
     }
 
     public static void destroyEnemy(int x, int y) {
+        killedSound.seek(Duration.ZERO);
+        killedSound.play();
         count -= 1;
         enemiesDestroyed += 1;
         speed += speedInc;
@@ -145,12 +159,15 @@ public class Enemy {
     }
 
     public void shoot(Group root) {
+//        System.out.println("Shooting");
+        shootSound.seek(Duration.ZERO);
         if (!root.getChildren().contains(imageView)) return;
         ImageView pb = bullet.getBullet();
         if (!root.getChildren().contains(pb)) {
             bullet.setX((float)(imageView.getX() + imageView.getFitWidth()/2 - pb.getFitWidth()/2));
             bullet.setY((float)(imageView.getY() + 20));
             root.getChildren().add(pb);
+            shootSound.play();
         }
     }
 }
