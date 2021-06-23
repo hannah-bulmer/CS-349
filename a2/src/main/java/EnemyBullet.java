@@ -27,10 +27,6 @@ public class EnemyBullet {
         imageView.setY(y);
     }
 
-    public float getX() {
-        return (float)(imageView.getX());
-    }
-
     public float getY() {
         return (float)(imageView.getY());
     }

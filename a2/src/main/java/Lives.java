@@ -1,16 +1,12 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import javafx.application.Application;
+
 import javafx.geometry.Pos;
 import javafx.scene.Group;
-import javafx.animation.AnimationTimer;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.layout.Border;
 import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -48,13 +44,7 @@ public class Lives {
         }
     }
 
-    public void reset(Group root) {
-        count = 3;
-//        this.addToGroup(root);
-    }
-
     public void gameOver(Group root, Scene s, int highscore) {
-//        timer.stop();
         setUpNewGame("GAME OVER", root, s, highscore);
     }
 

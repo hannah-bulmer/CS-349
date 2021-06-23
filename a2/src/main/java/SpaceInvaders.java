@@ -1,19 +1,14 @@
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javafx.application.Application;
 import javafx.animation.AnimationTimer;
 import javafx.scene.Scene;
 import javafx.scene.Group;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.*;
 import javafx.scene.input.KeyCode;
 import javafx.geometry.Point2D;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
@@ -36,7 +31,9 @@ public class SpaceInvaders extends Application {
     float alien_y_dist = 50;
 
     Text highScore = new Text("High score: 0");
+    int highScoreCount = 0;
     Text levelNum;
+    int curLevel = 1;
 
     Player player;
 
@@ -72,9 +69,16 @@ public class SpaceInvaders extends Application {
     void handle_animation() {
         if (level.getRoot() != root) return;
         if (Enemy.getEnemyCount() == 0) {
-            l.winState(root,level, Enemy.getEnemiesDestroyed());
-//            timer.stop();
-            setupChangeLevel(level);
+            if (curLevel == 3) {
+                l.winState(root,level, Enemy.getEnemiesDestroyed());
+                setupChangeLevel(level);
+            } else {
+                Enemy.reset();
+                root = new Group();
+                setupLevel(level, curLevel + 1);
+                level.setRoot(root);
+                highScoreCount += 50;
+            }
         }
         player.handle_animation(root);
 
@@ -101,7 +105,7 @@ public class SpaceInvaders extends Application {
                     if (alien.contains(point) && root.getChildren().contains(alien)) {
                         aliens.get(i).get(j).delete(root);
                         Enemy.destroyEnemy(i,j);
-                        highScore.setText("High score: " + String.valueOf(Enemy.getEnemiesDestroyed()));
+                        highScore.setText("High score: " + String.valueOf(Enemy.getEnemiesDestroyed() + highScoreCount));
                         root.getChildren().remove(bullet);
                         bullets = player.removeBullet(k);
                         size = bullets.size();
@@ -112,15 +116,14 @@ public class SpaceInvaders extends Application {
                 Point2D point = new Point2D(bullet.getX(),bullet.getY());
                 if (player.getPlayer().contains(point) && root.getChildren().contains(bullet)) {
                     root.getChildren().remove(bullet);
-                    System.out.println("Lost life");
-                    boolean go = l.loseLife(root, player, level, Enemy.getEnemiesDestroyed());
+                    boolean go = l.loseLife(root, player, level, highScoreCount + Enemy.getEnemiesDestroyed());
                     if (go) setupChangeLevel(level);
                 }
 
                 Enemy alien = aliens.get(i).get(j);
 
                 if (alien.getY() > screen_height - 60 && root.getChildren().contains(alien.getEnemy())) {
-                    l.gameOver(root, level, Enemy.getEnemiesDestroyed());
+                    l.gameOver(root, level, highScoreCount + Enemy.getEnemiesDestroyed());
                     setupChangeLevel(level);
                 }
 
@@ -145,6 +148,7 @@ public class SpaceInvaders extends Application {
         level.setFill(Color.BLACK);
 
         levelNum = new Text("Level: "+ num);
+        curLevel = num;
         setTextStyles(highScore, 40);
         setTextStyles(levelNum, 500);
 
@@ -255,48 +259,29 @@ public class SpaceInvaders extends Application {
 
     }
 
-    void removeAllAliens() {
-        for (int i = 0; i < aliens.size(); i ++) {
-            for (int j = 0; j < aliens.get(0).size(); j++) {
-                Enemy alien = aliens.get(i).get(j);
-                if (root.getChildren().contains(alien.getEnemy())) {
-                    if (root.getChildren().contains(alien.getBullet().getBullet())) {
-                        root.getChildren().remove(alien.getBullet().getBullet());
-                    }
-                    root.getChildren().remove(alien.getEnemy());
-                }
-            }
-        }
-    }
-
     void setupChangeLevel(Scene s) {
+        highScoreCount = 0;
         timer.stop();
         s.setOnKeyPressed(keyEvent -> {
             if (keyEvent.getCode() == KeyCode.ENTER || keyEvent.getCode() == KeyCode.DIGIT1) {
                 timer.start();
                 Enemy.reset();
                 root = new Group();
-//                placeAliens();
-//                root.getChildren().add(player.getPlayer());
-//                l.reset(root);
+                highScore.setText("High score: 0");
                 setupLevel(level, 1);
                 s.setRoot(root);
             } else if (keyEvent.getCode() == KeyCode.DIGIT2) {
                 timer.start();
                 Enemy.reset();
                 root = new Group();
-//                placeAliens();
-//                root.getChildren().add(player.getPlayer());
-//                l.reset(root);
+                highScore.setText("High score: 0");
                 setupLevel(level, 2);
                 s.setRoot(root);
             } else if (keyEvent.getCode() == KeyCode.DIGIT3) {
                 timer.start();
                 Enemy.reset();
                 root = new Group();
-//                placeAliens();
-//                root.getChildren().add(player.getPlayer());
-//                l.reset(root);
+                highScore.setText("High score: 0");
                 setupLevel(level, 3);
                 s.setRoot(root);
             } else if (keyEvent.getCode() == KeyCode.Q) {
@@ -304,10 +289,8 @@ public class SpaceInvaders extends Application {
             } else if (keyEvent.getCode() == KeyCode.I) {
                 timer.start();
                 Enemy.reset();
+                highScore.setText("High score: 0");
                 root = new Group();
-//                placeAliens();
-//                root.getChildren().add(player.getPlayer());
-//                l.reset(root);
                 setupStart(level);
                 level.setRoot(start);
             }

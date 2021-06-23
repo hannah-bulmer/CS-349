@@ -1,10 +1,8 @@
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
 import java.io.FileNotFoundException;
-import javafx.application.Application;
+
 import javafx.scene.Group;
-import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.media.Media;

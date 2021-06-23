@@ -1,8 +1,6 @@
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import javafx.application.Application;
 import javafx.scene.Group;
-import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -31,10 +29,6 @@ public class PlayerBullet {
 
     public void setY(float y) {
         imageView.setY(y);
-    }
-
-    public float getX() {
-        return (float)(imageView.getX());
     }
 
     public float getY() {
