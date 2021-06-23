@@ -1,3 +1,7 @@
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import javafx.application.Application;
 import javafx.animation.AnimationTimer;
 import javafx.scene.Scene;
@@ -25,19 +29,23 @@ public class SpaceInvaders extends Application {
 
     int cols = 10;
     int rows = 5;
-    Enemy [][] aliens = new Enemy [rows][cols];
+    ArrayList<ArrayList<Enemy>> aliens;
     float left_alien_x = left_edge + 15;
     float alien_x_dist = 53;
     float alien_y = 50;
     float alien_y_dist = 50;
 
     Text highScore = new Text("High score: 0");
-    Text levelNum = new Text("Level: 1");
+    Text levelNum;
 
-//    PlayerBullet playerBullet;
     Player player;
 
     Group root = new Group();
+    Group start = new Group();
+    Lives l;
+
+    AnimationTimer timer;
+    Scene level;
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -52,12 +60,10 @@ public class SpaceInvaders extends Application {
         placeAliens();
 
         // setup HUD
-        setTextStyles(highScore, 40);
-        setTextStyles(levelNum, 500);
-        Lives l = new Lives();
+        l = new Lives();
         l.addToGroup(root);
 
-        AnimationTimer timer = new AnimationTimer() {
+        timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
                 handle_animation();
@@ -65,45 +71,83 @@ public class SpaceInvaders extends Application {
         };
         timer.start();
 
-        Label label = new Label("Hello World!!");
-        Scene intro = new Scene(new StackPane(label), screen_width, screen_height);
-        Scene level = new Scene(root, screen_width, screen_height);
+        level = new Scene(root, screen_width, screen_height);
 
-        setupLevel(level);
+        setupStart(level);
+        level.setRoot(start);
 
         stage.setScene(level);
         stage.show();
     }
 
     void handle_animation() {
-        player.handle_animation();
+        if (Enemy.getEnemyCount() == 0) {
+            l.winState(root,level, Enemy.getEnemiesDestroyed());
+//            timer.stop();
+            setupChangeLevel(level);
+        }
+        player.handle_animation(root);
 
-        player.getBullet().handle_animation(root);
-        ImageView pb = player.getBullet().getPlayerBullet();
+        ArrayList<PlayerBullet> bullets = player.getBullets();
 
+//        boolean[][] map = Enemy.getMap();
         int x = (int)Math.floor(Math.random()*(rows-1));
-        int y = (int)Math.floor(Math.random()*(cols-1));
+        int y = (int)Math.floor(Math.random()*(aliens.get(0).size()-1));
 
-        for (int i = 0; i < rows; i ++) {
-            for (int j = 0; j < cols; j ++) {
-                if (root.getChildren().contains(pb)) {
-                    // centre bullet
-                    Point2D point = new Point2D(player.getBullet().getX(), player.getBullet().getY());
-                    if (aliens[i][j].getEnemy().contains(point) && root.getChildren().contains(aliens[i][j].getEnemy())) {
-                        root.getChildren().remove(aliens[i][j].getEnemy());
-                        Enemy.destroyEnemy();
+//        while(true) {
+//            if (Enemy.getEnemyCount() == 0) break;
+//            if (map[x][y]) break;
+//            x = (int)Math.floor(Math.random()*(rows-1));
+//            y = (int)Math.floor(Math.random()*(aliens.get(0).size()-1));
+//        }
+
+        for (int i = 0; i < aliens.size(); i ++) {
+            for (int j = 0; j < aliens.get(0).size(); j ++) {
+                int size = bullets.size();
+                for (int k = 0; k < size; k ++) {
+                    ImageView bullet = bullets.get(k).getPlayerBullet();
+                    Point2D point = new Point2D(bullet.getX(),bullet.getY());
+                    ImageView alien = aliens.get(i).get(j).getEnemy();
+                    if (alien.contains(point) && root.getChildren().contains(alien)) {
+                        aliens.get(i).get(j).delete(root);
+                        Enemy.destroyEnemy(i,j);
                         highScore.setText("High score: " + String.valueOf(Enemy.getEnemiesDestroyed()));
-                        root.getChildren().remove(pb);
+                        root.getChildren().remove(bullet);
+                        bullets = player.removeBullet(k);
+                        size = bullets.size();
                     }
                 }
-                aliens[i][j].handle_animation(root,left_edge + j * alien_x_dist,
+
+                ImageView bullet = aliens.get(i).get(j).bullet.getBullet();
+                Point2D point = new Point2D(bullet.getX(),bullet.getY());
+                if (player.getPlayer().contains(point) && root.getChildren().contains(bullet)) {
+                    root.getChildren().remove(bullet);
+                    System.out.println("Lost life");
+                    boolean go = l.loseLife(root, player, level, Enemy.getEnemiesDestroyed());
+                    if (go) setupChangeLevel(level);
+                }
+
+                Enemy alien = aliens.get(i).get(j);
+
+                if (alien.getY() > screen_height - 60 && root.getChildren().contains(alien.getEnemy())) {
+                    l.gameOver(root, level, Enemy.getEnemiesDestroyed());
+                    setupChangeLevel(level);
+                }
+
+                aliens.get(i).get(j).handle_animation(root,left_edge + j * alien_x_dist,
                         right_edge - (cols - j - 1) * alien_x_dist, i == x && j == y);
             }
         }
     }
 
-    void setupLevel(Scene level) {
+    void setupLevel(Scene level, int num) {
         level.setFill(Color.BLACK);
+
+        levelNum = new Text("Level: "+ num);
+        setTextStyles(highScore, 40);
+        setTextStyles(levelNum, 500);
+
+        Enemy.setConstants(num);
 
         level.setOnKeyPressed(keyEvent -> {
             if(keyEvent.getCode() == KeyCode.A || keyEvent.getCode() == KeyCode.LEFT) {
@@ -113,7 +157,7 @@ public class SpaceInvaders extends Application {
                 player.moveRight();
             }
             if(keyEvent.getCode() == KeyCode.SPACE || keyEvent.getCode() == KeyCode.ENTER) {
-                player.shootBullet(root);
+                player.shootBullets(root);
             }
         });
 
@@ -124,22 +168,25 @@ public class SpaceInvaders extends Application {
         });
     }
 
-    void placeAliens() throws FileNotFoundException {
+    void placeAliens() {
+        aliens = new ArrayList<>();
+        Enemy.setup(rows,cols);
         float x = left_alien_x;
         float y = alien_y;
         for (int i = 0; i < rows; i ++) {
+            aliens.add(new ArrayList<>());
             for (int j = 0; j < cols; j ++) {
                 int num = i % 3 + 1;
-                aliens[i][j] = new Enemy(num);
-                aliens[i][j].setCenterX(x);
-                aliens[i][j].setCenterY(y);
+                aliens.get(i).add(new Enemy(num,i,j));
+                aliens.get(i).get(j).setCenterX(x);
+                aliens.get(i).get(j).setCenterY(y);
                 x += alien_x_dist;
             }
             x = left_alien_x;
             y += alien_y_dist;
         }
 
-        for (Enemy[] row:aliens) {
+        for (ArrayList<Enemy> row:aliens) {
             for (Enemy e: row) {
                 root.getChildren().add(e.getEnemy());
             }
@@ -152,6 +199,118 @@ public class SpaceInvaders extends Application {
         text.setFont(Font.font("Avenir", 20));
         text.setFill(Color.WHITE);
         root.getChildren().add(text);
+    }
+
+    void setTextStyles(Text text, int x, int y, int font) {
+        text.setX(x);
+        text.setY(y);
+        text.setFont(Font.font("Avenir", font));
+        text.setFill(Color.WHITE);
+        root.getChildren().add(text);
+    }
+
+    void setupStart(Scene level) {
+        level.setFill(Color.BLACK);
+        try {
+            Image logo = new Image(new FileInputStream("src/resources/images/logo.png"));
+            ImageView imageView = new ImageView(logo);
+            start.getChildren().add(imageView);
+        } catch (FileNotFoundException e) {
+            System.exit(0);
+        }
+
+        Text [] texts = new Text[7];
+
+        texts[0] = new Text("Instructions");
+        texts[1] = new Text("ENTER - Start Game");
+        texts[2] = new Text("A or ←, D or → - Move ship left or right");
+        texts[3] = new Text("SPACE or ENTER - Fire!");
+        texts[4] = new Text("Q - Quit Game");
+        texts[5] = new Text("1 or 2 or 3 - Start Game at specific level");
+        texts[6] = new Text("Implemented by Hannah Bulmer for CS349, University of Waterloo, S21");
+
+        setTextStyles(texts[0], 400, 300, 30);
+        setTextStyles(texts[1], 400, 340, 20);
+        setTextStyles(texts[2], 400, 380, 20);
+        setTextStyles(texts[3], 400, 420, 20);
+        setTextStyles(texts[4], 400, 460, 20);
+        setTextStyles(texts[5], 400, 500, 20);
+        setTextStyles(texts[6], 400, 550, 10);
+
+        start.getChildren().addAll(texts);
+
+        level.setOnKeyPressed(keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER || keyEvent.getCode() == KeyCode.DIGIT1) {
+                setupLevel(level, 1);
+                level.setRoot(root);
+            } else if (keyEvent.getCode() == KeyCode.DIGIT2) {
+                setupLevel(level, 2);
+                level.setRoot(root);
+            } else if (keyEvent.getCode() == KeyCode.DIGIT3) {
+                setupLevel(level, 3);
+                level.setRoot(root);
+            }
+        });
+
+    }
+
+    void removeAllAliens() {
+        for (int i = 0; i < aliens.size(); i ++) {
+            for (int j = 0; j < aliens.get(0).size(); j++) {
+                Enemy alien = aliens.get(i).get(j);
+                if (root.getChildren().contains(alien.getEnemy())) {
+                    if (root.getChildren().contains(alien.getBullet().getBullet())) {
+                        root.getChildren().remove(alien.getBullet().getBullet());
+                    }
+                    root.getChildren().remove(alien.getEnemy());
+                }
+            }
+        }
+    }
+
+    void setupChangeLevel(Scene s) {
+        timer.stop();
+        s.setOnKeyPressed(keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER || keyEvent.getCode() == KeyCode.DIGIT1) {
+                timer.start();
+                Enemy.reset();
+                root = new Group();
+                placeAliens();
+                root.getChildren().add(player.getPlayer());
+                l.reset(root);
+                setupLevel(level, 1);
+                s.setRoot(root);
+            } else if (keyEvent.getCode() == KeyCode.DIGIT2) {
+                timer.start();
+                Enemy.reset();
+                root = new Group();
+                placeAliens();
+                root.getChildren().add(player.getPlayer());
+                l.reset(root);
+                setupLevel(level, 2);
+                s.setRoot(root);
+            } else if (keyEvent.getCode() == KeyCode.DIGIT3) {
+                timer.start();
+                Enemy.reset();
+                root = new Group();
+                placeAliens();
+                root.getChildren().add(player.getPlayer());
+                l.reset(root);
+                setupLevel(level, 3);
+                s.setRoot(root);
+            } else if (keyEvent.getCode() == KeyCode.Q) {
+                System.exit(0);
+            } else if (keyEvent.getCode() == KeyCode.I) {
+                timer.start();
+                Enemy.reset();
+                root = new Group();
+                placeAliens();
+                root.getChildren().add(player.getPlayer());
+                l.reset(root);
+                setupStart(level);
+                level.setRoot(start);
+            }
+        });
     }
 }
 

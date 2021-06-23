@@ -13,8 +13,13 @@ public class PlayerBullet {
     int h = 10;
     float bulletSpeed = 15;
 
-    public PlayerBullet() throws FileNotFoundException {
-        image = new Image(new FileInputStream("src/resources/images/player_bullet.png"));
+    public PlayerBullet() {
+        try {
+            image = new Image(new FileInputStream("src/resources/images/player_bullet.png"));
+        } catch (FileNotFoundException e) {
+            System.exit(0);
+        }
+
         imageView = new ImageView(image);
         imageView.setFitHeight(h);
         imageView.setFitWidth(w);

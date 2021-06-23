@@ -1,5 +1,7 @@
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -11,11 +13,13 @@ public class Player {
     ImageView imageView;
     int w = 40;
     int h = 30;
+    float screenWidth;
 
     int speed = 10;
     int velocity = 0;
+    int MAX_BULLETS = 3;
 
-    PlayerBullet bullet;
+    ArrayList<PlayerBullet> bullets = new ArrayList<>();
 
     public Player(float screen_width, float screen_height) throws FileNotFoundException {
         image = new Image(new FileInputStream("src/resources/images/player.png"));
@@ -25,26 +29,25 @@ public class Player {
 
         float x = screen_width / 2;
         float y = screen_height - 50;
+
+        this.screenWidth = screen_width;
         imageView.setX(x);
         imageView.setY(y);
-        bullet = new PlayerBullet();
     }
 
-    public void shootBullet(Group root) {
+    public void shootBullets(Group root) {
+        if (bullets.size() > MAX_BULLETS - 1) return;
+        PlayerBullet bullet = new PlayerBullet();
         ImageView pb = bullet.getPlayerBullet();
-        if (!root.getChildren().contains(pb)) {
-            bullet.setX((float)(imageView.getX() + imageView.getFitWidth()/2 - pb.getFitWidth()/2));
-            bullet.setY((float)(imageView.getY()));
-            root.getChildren().add(pb);
-        }
+        bullets.add(bullet);
+
+        bullet.setX((float)(imageView.getX() + imageView.getFitWidth()/2 - pb.getFitWidth()/2));
+        bullet.setY((float)(imageView.getY()));
+        root.getChildren().add(pb);
     }
 
     public ImageView getPlayer() {
         return imageView;
-    }
-
-    public PlayerBullet getBullet() {
-        return bullet;
     }
 
     public void moveLeft() {
@@ -59,7 +62,34 @@ public class Player {
         velocity = 0;
     }
 
-    public void handle_animation() {
+    public void setX(int x) {
+        imageView.setX(x);
+    }
+
+    public ArrayList<PlayerBullet> getBullets() {
+        return bullets;
+    }
+
+    public ArrayList<PlayerBullet> removeBullet(int idx) {
+        bullets.remove(idx);
+        return bullets;
+    }
+
+    public void handle_animation(Group root) {
+        if (imageView.getX() < 0 && velocity < 0) stop();
+        if (imageView.getX() > screenWidth - w && velocity > 0) stop();
+
         imageView.setX(imageView.getX() + velocity);
+
+        int size = bullets.size();
+
+        for (int i = 0; i < size; i ++) {
+            PlayerBullet b = bullets.get(i);
+            b.handle_animation(root);
+            if (b.getY() < 0) {
+                bullets.remove(b);
+                size = bullets.size();
+            }
+        }
     }
 }
