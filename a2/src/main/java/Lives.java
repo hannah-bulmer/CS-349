@@ -56,7 +56,7 @@ public class Lives {
             return true;
         }
         root.getChildren().remove(imageViews[count-1]);
-        int loc = (int)Math.floor(Math.random()*(800-50) + 50);
+        int loc = (int)Math.floor(Math.random()*(800-100) + 50);
         player.setX(loc);
         count -= 1;
         return false;

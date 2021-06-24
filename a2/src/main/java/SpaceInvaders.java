@@ -1,4 +1,5 @@
 import java.io.FileInputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import javafx.application.Application;
@@ -15,12 +16,13 @@ import javafx.scene.text.Text;
 import javafx.scene.text.Font;
 
 import java.io.FileNotFoundException;
+import java.util.HashSet;
+import java.util.Random;
 
 public class SpaceInvaders extends Application {
     float screen_width = 800;
     float screen_height = 600;
     float left_edge = 20;
-    float right_edge = screen_width - 3 * left_edge;
 
     int cols = 10;
     int rows = 5;
@@ -29,6 +31,7 @@ public class SpaceInvaders extends Application {
     float alien_x_dist = 53;
     float alien_y = 50;
     float alien_y_dist = 50;
+    int direction = 1;
 
     Text highScore = new Text("High score: 0");
     int highScoreCount = 0;
@@ -43,6 +46,8 @@ public class SpaceInvaders extends Application {
 
     AnimationTimer timer;
     Scene level;
+
+    Random generator = new Random();
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -84,16 +89,33 @@ public class SpaceInvaders extends Application {
 
         ArrayList<PlayerBullet> bullets = player.getBullets();
 
-//        boolean[][] map = Enemy.getMap();
-        int x = (int)Math.floor(Math.random()*(rows-1));
-        int y = (int)Math.floor(Math.random()*(aliens.get(0).size()-1));
+        ArrayList<Integer> x = new ArrayList<>();
+        ArrayList<Integer> y = new ArrayList<>();
 
-//        while(true) {
-//            if (Enemy.getEnemyCount() == 0) break;
-//            if (map[x][y]) break;
-//            x = (int)Math.floor(Math.random()*(rows-1));
-//            y = (int)Math.floor(Math.random()*(aliens.get(0).size()-1));
-//        }
+
+        // get most left
+        int mostLeft = (int)screen_width;
+        int mostRight = 0;
+
+        for (int i = 0; i < aliens.size(); i ++) {
+            for (int j = 0; j < aliens.get(0).size(); j ++) {
+                if (!root.getChildren().contains(aliens.get(i).get(j).getEnemy())) continue;
+                mostLeft = Math.min(mostLeft, aliens.get(i).get(j).getX());
+                mostRight = Math.max(mostRight, aliens.get(i).get(j).getX());
+                x.add(i);
+                y.add(j);
+            }
+        }
+
+        boolean dirChange = (mostLeft < 40 && direction == -1) || (mostRight > 720 && direction == 1);
+        // enemy to shoot
+        int rx = x.get(generator.nextInt(x.size()));
+        int ry = y.get(generator.nextInt(y.size()));
+
+        if (dirChange) {
+            System.out.println(mostLeft + " " + mostRight);
+            direction*= -1;
+        }
 
         for (int i = 0; i < aliens.size(); i ++) {
             for (int j = 0; j < aliens.get(0).size(); j ++) {
@@ -127,8 +149,7 @@ public class SpaceInvaders extends Application {
                     setupChangeLevel(level);
                 }
 
-                aliens.get(i).get(j).handle_animation(root,left_edge + j * alien_x_dist,
-                        right_edge - (cols - j - 1) * alien_x_dist, i == x && j == y);
+                aliens.get(i).get(j).handle_animation(root,direction, dirChange, i == rx && j == ry);
             }
         }
     }
@@ -219,6 +240,7 @@ public class SpaceInvaders extends Application {
         try {
             Image logo = new Image(new FileInputStream("src/resources/images/logo.png"));
             ImageView imageView = new ImageView(logo);
+            imageView.setY(20);
             start.getChildren().add(imageView);
         } catch (FileNotFoundException e) {
             System.exit(0);

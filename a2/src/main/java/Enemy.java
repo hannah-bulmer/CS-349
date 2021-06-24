@@ -17,11 +17,10 @@ public class Enemy {
     static int rows;
     static int cols;
 
-    static boolean[][] map;
     static float speed = 0.5F;
     static float speedInc = 0.05F;
     static int prob = 8000; // 1 in 10 of shooting
-    int direction = 1;
+//    int direction = 1;
     int changeY = 20;
 
     EnemyBullet bullet;
@@ -52,7 +51,6 @@ public class Enemy {
         }
 
         count += 1;
-        map[x][y] = true;
     }
 
     public static void reset() {
@@ -61,10 +59,6 @@ public class Enemy {
         speed = 0.5F;
         speedInc = 0.05F;
         prob = 8000;
-    }
-
-    public EnemyBullet getBullet() {
-        return bullet;
     }
 
     public static void setConstants(int level) {
@@ -88,11 +82,9 @@ public class Enemy {
     public static void setup(int rows, int cols) {
         Enemy.rows = rows;
         Enemy.cols = cols;
-        map = new boolean[rows][cols];
     }
 
     public void delete(Group root) {
-//        root.getChildren().remove(this.bullet.getBullet());
         root.getChildren().remove(imageView);
     }
 
@@ -102,16 +94,13 @@ public class Enemy {
         count -= 1;
         enemiesDestroyed += 1;
         speed += speedInc;
-        map[x][y] = false;
-    }
-
-    public static boolean[][] getMap() {
-        return map;
     }
 
     public int getY() {
         return (int)imageView.getY();
     }
+
+    public int getX() { return (int)imageView.getX(); }
 
     public static int getEnemyCount() {
         return count;
@@ -135,29 +124,23 @@ public class Enemy {
         imageView.setY(y);
     }
 
-    public void handle_animation(Group root, float left, float right, boolean shouldShoot) {
+    public void handle_animation(Group root, int direction, boolean changedDirection, boolean shouldShoot) {
         float x = (float)(imageView.getX());
         float y = (float)(imageView.getY());
         int val = (int)Math.floor(Math.random()*(prob-1));
-        if ((x < left || x > right) && shouldShoot) shoot(root);
+        if (changedDirection && shouldShoot) shoot(root);
         else if (val == 7) shoot(root);
-        if (x < left) {
-            // random enemy fire
-            direction *= -1;
-            this.setCenterY(y + changeY);
-        } else if (x > right) {
-            // random enemy fire
-            direction *= -1;
+        if (changedDirection) {
+            System.out.println("Changed direction");
             this.setCenterY(y + changeY);
         }
-        double velocity = (double)(speed*direction);
+        double velocity = (speed*direction);
         this.setCenterX(x + velocity);
 
         bullet.handle_animation(root);
     }
 
     public void shoot(Group root) {
-//        System.out.println("Shooting");
         shootSound.seek(Duration.ZERO);
         if (!root.getChildren().contains(imageView)) return;
         ImageView pb = bullet.getBullet();

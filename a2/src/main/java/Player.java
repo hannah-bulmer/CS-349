@@ -19,7 +19,7 @@ public class Player {
 
     int speed = 10;
     int velocity = 0;
-    int MAX_BULLETS = 3;
+    int MAX_BULLETS = 2;
 
     MediaPlayer bulletSound;
 
@@ -47,7 +47,6 @@ public class Player {
 
     public void shootBullets(Group root) {
         if (bullets.size() > MAX_BULLETS - 1) return;
-        System.out.println("Play sound");
         bulletSound.seek(Duration.ZERO);
         bulletSound.play();
         PlayerBullet bullet = new PlayerBullet();
