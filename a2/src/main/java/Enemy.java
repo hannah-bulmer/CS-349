@@ -65,7 +65,7 @@ public class Enemy {
         if (level == 1) return;
         if (level == 2) {
             speed = 1F;
-            speedInc = 0.08F;
+            speedInc = 0.8F;
             prob = 6000;
         }
         if (level == 3) {
@@ -131,7 +131,6 @@ public class Enemy {
         if (changedDirection && shouldShoot) shoot(root);
         else if (val == 7) shoot(root);
         if (changedDirection) {
-            System.out.println("Changed direction");
             this.setCenterY(y + changeY);
         }
         double velocity = (speed*direction);

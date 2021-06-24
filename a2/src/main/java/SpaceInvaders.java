@@ -72,6 +72,7 @@ public class SpaceInvaders extends Application {
     }
 
     void handle_animation() {
+        if (level.getRoot() == start) player.handle_start_animation(start);
         if (level.getRoot() != root) return;
         if (Enemy.getEnemyCount() == 0) {
             if (curLevel == 3) {
@@ -113,7 +114,6 @@ public class SpaceInvaders extends Application {
         int ry = y.get(generator.nextInt(y.size()));
 
         if (dirChange) {
-            System.out.println(mostLeft + " " + mostRight);
             direction*= -1;
         }
 
@@ -242,6 +242,8 @@ public class SpaceInvaders extends Application {
             ImageView imageView = new ImageView(logo);
             imageView.setY(20);
             start.getChildren().add(imageView);
+            player = new Player(150,450,true);
+            start.getChildren().add(player.getPlayer());
         } catch (FileNotFoundException e) {
             System.exit(0);
         }
@@ -276,6 +278,8 @@ public class SpaceInvaders extends Application {
             } else if (keyEvent.getCode() == KeyCode.DIGIT3) {
                 setupLevel(level, 3);
                 level.setRoot(root);
+            } else if (keyEvent.getCode() == KeyCode.SPACE) {
+                player.shootBullets(start);
             }
         });
 
