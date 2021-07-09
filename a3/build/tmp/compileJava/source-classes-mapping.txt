@@ -1,8 +1,8 @@
-ca/uwaterloo/cs349/Sprite.java
- ca.uwaterloo.cs349.Sprite
-ca/uwaterloo/cs349/RectangleSprite.java
- ca.uwaterloo.cs349.RectangleSprite
-ca/uwaterloo/cs349/SceneGraph.java
- ca.uwaterloo.cs349.SceneGraph
- ca.uwaterloo.cs349.SceneGraph$1
- ca.uwaterloo.cs349.SceneGraph$OPERATION
+RectangleSprite.java
+ RectangleSprite
+Sprite.java
+ Sprite
+RagDoll.java
+ RagDoll
+ RagDoll$1
+ RagDoll$OPERATION

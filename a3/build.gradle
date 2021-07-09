@@ -4,7 +4,6 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.8'
 }
 
-group 'ca.uwaterloo.cs349'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = 11
@@ -21,4 +20,4 @@ javafx {
     version = "11.0.2"
 }
 
-mainClassName = 'ca.uwaterloo.cs349.SceneGraph'
+mainClassName = 'RagDoll'
