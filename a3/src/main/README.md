@@ -15,3 +15,6 @@ First enhancement: beautiful artwork
 
 Second enhancement: file save and load system
 
+<img width="505" alt="Screen Shot 2021-07-15 at 6 13 59 PM" src="https://user-images.githubusercontent.com/35310862/125864653-f90da653-cf36-4f27-9e69-6a9d7a5e9c52.png">
+
+
