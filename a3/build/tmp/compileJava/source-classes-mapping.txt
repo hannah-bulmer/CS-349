@@ -1,8 +1,10 @@
-RectangleSprite.java
- RectangleSprite
 Sprite.java
  Sprite
+BodyPart.java
+ BodyPart
 RagDoll.java
  RagDoll
  RagDoll$1
- RagDoll$OPERATION
+ RagDoll$2
+ RagDoll$3
+ RagDoll$4
