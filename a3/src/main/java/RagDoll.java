@@ -5,20 +5,20 @@ import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.*;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import com.github.cliftonlabs.json_simple.JsonObject;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
 
 public class RagDoll extends Application {
 	final int screen_width = 500;
@@ -26,6 +26,7 @@ public class RagDoll extends Application {
 	double previous_x, previous_y;
 	double start_angle;
 	Sprite selectedSprite;
+	Canvas canvas;
 
 	double f = 2;
 
@@ -85,7 +86,7 @@ public class RagDoll extends Application {
 		VBox layout = new VBox(menuBar);
 
 		// setup a canvas to use as a drawing surface
-		Canvas canvas = new Canvas(screen_width, screen_height);
+		canvas = new Canvas(screen_width, screen_height);
 		layout.getChildren().add(canvas);
 		Scene scene = new Scene(layout, screen_width, screen_height);
 
@@ -179,7 +180,18 @@ public class RagDoll extends Application {
 		save.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				onSave();
+				onSave(stage);
+			}
+		});
+
+		open.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				try {
+					onOpen(stage);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		});
 
@@ -202,12 +214,88 @@ public class RagDoll extends Application {
 		root.draw(gc);
 	}
 
-	private void onSave() {
-		System.out.println("Head: " + head.angle);
-		System.out.println("Body: " + body.dx + ", " + body.dy);
-		System.out.println("Left arm: " +  leftUpperArm.angle);
-		System.out.println("Left leg: " + leftUpperLeg.angle + ", " + leftUpperLeg.sx + ", " + leftUpperLeg.sy);
-		JsonObject json = new JsonObject();
+	private void onOpen(Stage stage) throws IOException {
+		FileChooser fileChooser = new FileChooser();
+		File selectedFile = fileChooser.showOpenDialog(stage);
+
+		FileInputStream fstream = new FileInputStream(selectedFile);
+		BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+
+		// reset character first
+		root = createSprites();
+		draw(canvas, root);
+
+		String dx = br.readLine();
+		String dy = br.readLine();
+		System.out.println(dx + " " + dy);
+		body.translate(Double.parseDouble(dx), Double.parseDouble(dy));
+
+		String line;
+
+		Sprite[] loop = new Sprite [] {head,leftUpperArm,rightUpperArm,leftLowerArm,rightLowerArm,leftHand,rightHand,leftUpperLeg,rightUpperLeg,leftLowerLeg,rightLowerLeg,leftFoot,rightFoot};
+		for (Sprite s: loop) {
+			line = br.readLine();
+			s.rotate(Double.parseDouble(line));
+		}
+
+		dy = br.readLine();
+		leftUpperLeg.scale(1, Double.parseDouble(dy));
+		dy = br.readLine();
+		rightUpperLeg.scale(1, Double.parseDouble(dy));
+		dy = br.readLine();
+		leftLowerLeg.scale(1, Double.parseDouble(dy));
+		dy = br.readLine();
+		rightLowerLeg.scale(1, Double.parseDouble(dy));
+
+		draw(canvas,root);
+
+		fstream.close();
+	}
+
+	private void onSave(Stage stage) {
+		String content = "";
+		content += ((body.dx - 180) + System.lineSeparator());
+		content += ((body.dy - 100) + System.lineSeparator());
+
+		content += (head.angle + System.lineSeparator());
+		content += ((leftUpperArm.angle - 45) + System.lineSeparator());
+		content += ((rightUpperArm.angle + 45) + System.lineSeparator());
+		content += (leftLowerArm.angle + System.lineSeparator());
+		content += (rightLowerArm.angle + System.lineSeparator());
+		content += (leftHand.angle + System.lineSeparator());
+		content += (rightHand.angle + System.lineSeparator());
+		content += (leftUpperLeg.angle + System.lineSeparator());
+		content += (rightUpperLeg.angle + System.lineSeparator());
+		content += (leftLowerLeg.angle + System.lineSeparator());
+		content += (rightLowerLeg.angle + System.lineSeparator());
+		content += (leftFoot.angle + System.lineSeparator());
+		content += (rightFoot.angle + System.lineSeparator());
+
+		content += (leftUpperLeg.sy + System.lineSeparator());
+		content += (rightUpperLeg.sy + System.lineSeparator());
+		content += (leftLowerLeg.sy + System.lineSeparator());
+		content += (rightLowerLeg.sy + System.lineSeparator());
+
+		FileChooser fileChooser = new FileChooser();
+		FileChooser.ExtensionFilter ext = new FileChooser.ExtensionFilter("Text file", "*.doll");
+		fileChooser.getExtensionFilters().add(ext);
+
+		File file = fileChooser.showSaveDialog(stage);
+		if (file != null) {
+			saveTextToFile(content, file);
+		}
+	}
+
+	private void saveTextToFile(String content, File file) {
+		try {
+			PrintWriter pw = new PrintWriter(file);
+			pw.close();
+			BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
+			writer.write(content);
+			writer.close();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
 	}
 	
 	private Sprite createSprites() {
@@ -281,9 +369,9 @@ public class RagDoll extends Application {
 
 		// set rotations (or default)
 		leftUpperArm.rotate(45);
-		leftLowerArm.rotate(-45);
+//		leftLowerArm.rotate(-45);
 		rightUpperArm.rotate(-45);
-		rightLowerArm.rotate(45);
+//		rightLowerArm.rotate(45);
 
 		// return root of the tree
 		return body;

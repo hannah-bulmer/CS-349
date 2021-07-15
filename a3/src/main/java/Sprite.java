@@ -31,8 +31,8 @@ public abstract class Sprite {
     public double dx = 0;
     public double dy = 0;
 
-    public double sx = 0;
-    public double sy = 0;
+    public double sx = 1;
+    public double sy = 1;
 
 
     public Sprite(String id) {
@@ -66,6 +66,7 @@ public abstract class Sprite {
         matrix.prependTranslation(dx,dy);
         this.dx += dx;
         this.dy += dy;
+        System.out.println("Translated");
     }
 
     void rotate(double theta) {
